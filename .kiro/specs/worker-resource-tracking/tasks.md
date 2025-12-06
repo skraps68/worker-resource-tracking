@@ -196,17 +196,17 @@
   - Test edge cases (infinity dates, boundary conditions)
   - _Requirements: All_
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Set up React frontend project
-- [ ] 10.1 Create React application structure
+- [x] 10. Set up React frontend project
+- [x] 10.1 Create React application structure
   - Initialize React project with create-react-app or Vite
   - Set up component structure for CreationPanel, ViewingPanel, QueryPanel
   - Configure API client for backend communication
   - _Requirements: 5.1_
 
-- [ ] 10.2 Implement CreationPanel component
+- [x] 10.2 Implement CreationPanel component
   - Create form with input fields for name, org, type, res_start
   - Implement submit handler to call POST /api/workers
   - Display success/error feedback
@@ -214,33 +214,33 @@
   - Implement update handler to call PUT /api/resources/:rid
   - _Requirements: 5.2, 5.3, 5.4, 5.7_
 
-- [ ] 10.3 Implement ViewingPanel component
+- [x] 10.3 Implement ViewingPanel component
   - Create table to display active resources
   - Fetch data from GET /api/resources/active on component mount
   - Display all required columns
   - _Requirements: 5.5, 5.7_
 
-- [ ] 10.4 Implement QueryPanel component
+- [x] 10.4 Implement QueryPanel component
   - Create form with input fields for business_date and processing_datetime
   - Implement query handler to call GET /api/resources/as-of
   - Display results in table with same columns as ViewingPanel
   - _Requirements: 5.6, 6.1, 5.7_
 
-- [ ] 10.5 Implement main App component
+- [x] 10.5 Implement main App component
   - Create layout with tabs or panels for Creation, Viewing, and Query
   - Wire up all child components
   - Add basic styling
   - _Requirements: 5.1_
 
-- [ ] 11. Final integration and testing
-- [ ] 11.1 Test end-to-end workflows
+- [x] 11. Final integration and testing
+- [x] 11.1 Test end-to-end workflows
   - Test creating worker and resource through UI
   - Test updating resource through UI
   - Test viewing active resources
   - Test executing as-of queries
   - _Requirements: All_
 
-- [ ] 11.2 Write integration tests
+- [x] 11.2 Write integration tests
   - Test complete worker lifecycle (create, update multiple times, query history)
   - Test bi-temporal queries at various points in time
   - Test concurrent update scenarios

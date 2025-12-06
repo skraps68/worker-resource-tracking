@@ -59,6 +59,12 @@ def app():
 
 
 @pytest.fixture(scope='function')
+def client(app):
+    """Create test client."""
+    return app.test_client()
+
+
+@pytest.fixture(scope='function')
 def clean_db(app):
     """Clean database before each test."""
     with app.app_context():
