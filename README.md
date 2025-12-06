@@ -13,6 +13,13 @@ A bi-temporal worker resource tracking and forecasting application built with Fl
 │   ├── services.py          # Business logic services
 │   ├── routes.py            # API endpoints
 │   └── tests/               # Test modules
+├── frontend/                # React frontend application
+│   ├── src/
+│   │   ├── api/            # API client
+│   │   ├── components/     # React components
+│   │   ├── App.jsx         # Main app component
+│   │   └── main.jsx        # Entry point
+│   └── package.json        # Frontend dependencies
 ├── run.py                   # Application entry point
 ├── requirements.txt         # Python dependencies
 ├── .env.example            # Environment variables template
@@ -101,6 +108,22 @@ pytest app/tests/test_properties.py -v
 ```
 
 Property-based tests use the Hypothesis library and run 100 iterations by default to verify correctness properties across randomly generated inputs.
+
+## Frontend
+
+The React-based frontend provides a web interface for managing workers and resources.
+
+### Setup Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at http://localhost:3000 and will proxy API requests to the backend.
+
+See [frontend/README.md](frontend/README.md) for more details.
 
 ## Database Schema
 

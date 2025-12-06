@@ -395,7 +395,7 @@ def test_rid_wid_preservation_across_versions(app, clean_db, name, org, type_, r
     org=st.text(min_size=1, max_size=50).filter(lambda x: '\x00' not in x and x.strip()),
     type_=st.text(min_size=1, max_size=50).filter(lambda x: '\x00' not in x and x.strip()),
     res_start=st.dates(min_value=date(2000, 1, 1), max_value=date(2020, 12, 31)),
-    new_res_end=st.dates(min_value=date(2020, 1, 1), max_value=date(2030, 12, 31))
+    new_res_end=st.dates(min_value=date(2000, 1, 1), max_value=date(2030, 12, 31))
 )
 def test_temporal_continuity_across_versions(app, clean_db, name, org, type_, res_start, new_res_end):
     """
@@ -405,13 +405,17 @@ def test_temporal_continuity_across_versions(app, clean_db, name, org, type_, re
     """
     from app.services import ResourceService
     
+    # Ensure new_res_end is >= res_start to maintain valid business time range
+    if new_res_end < res_start:
+        new_res_end = res_start
+    
     with app.app_context():
         # Create worker and resource
         wid, rid, version = ResourceService.create_worker_and_resource(
             name, org, type_, res_start
         )
         
-        # Update the resource (new_res_end will be >= res_start due to date ranges)
+        # Update the resource with valid new_res_end
         updated_rid, new_version = ResourceService.update_resource(rid, res_end=new_res_end)
         
         # Get both versions
