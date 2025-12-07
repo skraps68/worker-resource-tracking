@@ -58,7 +58,7 @@ function ViewingPanel() {
   return (
     <div className="panel viewing-panel">
       <div className="panel-header">
-        <h2>Active Resources</h2>
+        <h2>Active Resources {!loading && resources.length > 0 && `(${resources.length})`}</h2>
         <button 
           onClick={fetchActiveResources} 
           className="btn btn-refresh"

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { createWorker, updateResource } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { createWorker, updateResource, getActiveResources } from '../api/client';
 import './CreationPanel.css';
 
 /**
@@ -18,9 +18,27 @@ function CreationPanel() {
   // State for resource update form
   const [updateForm, setUpdateForm] = useState({
     rid: '',
+    wid: '',
+    name: '',
+    org: '',
     res_start: '',
-    res_end: ''
+    res_end: '',
+    current_res_start: '',
+    current_res_end: ''
   });
+
+  // State for active resources (for autocomplete)
+  const [activeResources, setActiveResources] = useState([]);
+  
+  // State for autocomplete suggestions
+  const [ridSuggestions, setRidSuggestions] = useState([]);
+  const [widSuggestions, setWidSuggestions] = useState([]);
+  const [nameSuggestions, setNameSuggestions] = useState([]);
+  
+  // State for showing/hiding dropdowns
+  const [showRidDropdown, setShowRidDropdown] = useState(false);
+  const [showWidDropdown, setShowWidDropdown] = useState(false);
+  const [showNameDropdown, setShowNameDropdown] = useState(false);
 
   // State for feedback messages
   const [workerMessage, setWorkerMessage] = useState({ type: '', text: '' });
@@ -31,6 +49,25 @@ function CreationPanel() {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   /**
+   * Fetch active resources on component mount
+   */
+  useEffect(() => {
+    fetchActiveResources();
+  }, []);
+
+  /**
+   * Fetch active resources for autocomplete
+   */
+  const fetchActiveResources = async () => {
+    try {
+      const data = await getActiveResources();
+      setActiveResources(data);
+    } catch (error) {
+      console.error('Error fetching active resources:', error);
+    }
+  };
+
+  /**
    * Handle worker form input changes
    */
   const handleWorkerChange = (e) => {
@@ -39,11 +76,74 @@ function CreationPanel() {
   };
 
   /**
-   * Handle resource update form input changes
+   * Handle resource update form input changes with autocomplete
    */
   const handleUpdateChange = (e) => {
     const { name, value } = e.target;
     setUpdateForm(prev => ({ ...prev, [name]: value }));
+
+    // Handle autocomplete for RID
+    if (name === 'rid') {
+      if (value) {
+        const matches = activeResources.filter(r => 
+          r.RID.toString().includes(value)
+        );
+        setRidSuggestions(matches);
+        setShowRidDropdown(matches.length > 0);
+      } else {
+        setRidSuggestions([]);
+        setShowRidDropdown(false);
+      }
+    }
+
+    // Handle autocomplete for WID
+    if (name === 'wid') {
+      if (value) {
+        const matches = activeResources.filter(r => 
+          r.WID.toString().includes(value)
+        );
+        setWidSuggestions(matches);
+        setShowWidDropdown(matches.length > 0);
+      } else {
+        setWidSuggestions([]);
+        setShowWidDropdown(false);
+      }
+    }
+
+    // Handle autocomplete for Name
+    if (name === 'name') {
+      if (value) {
+        const matches = activeResources.filter(r => 
+          r.name.toLowerCase().includes(value.toLowerCase())
+        );
+        setNameSuggestions(matches);
+        setShowNameDropdown(matches.length > 0);
+      } else {
+        setNameSuggestions([]);
+        setShowNameDropdown(false);
+      }
+    }
+  };
+
+  /**
+   * Handle selection from autocomplete dropdown
+   */
+  const handleResourceSelect = (resource) => {
+    setUpdateForm({
+      rid: resource.RID.toString(),
+      wid: resource.WID.toString(),
+      name: resource.name,
+      org: resource.org,
+      res_start: '',
+      res_end: '',
+      current_res_start: resource.res_start,
+      current_res_end: resource.res_end
+    });
+    
+    // Hide all dropdowns
+    setShowRidDropdown(false);
+    setShowWidDropdown(false);
+    setShowNameDropdown(false);
   };
 
   /**
@@ -114,11 +214,10 @@ function CreationPanel() {
 
   return (
     <div className="panel creation-panel">
-      <h2>Creation Panel</h2>
-      
-      {/* Worker Creation Form */}
-      <section className="form-section">
-        <h3>Create New Worker and Resource</h3>
+      <div className="two-column-layout">
+        {/* Worker Creation Form */}
+        <section className="form-section form-pane">
+          <h3>Create Worker/Resource</h3>
         <form onSubmit={handleWorkerSubmit} className="creation-form">
           <div className="form-group">
             <label htmlFor="name">Name:</label>
@@ -182,48 +281,147 @@ function CreationPanel() {
             </div>
           )}
         </form>
-      </section>
+        </section>
 
-      {/* Resource Update Form */}
-      <section className="form-section">
-        <h3>Update Existing Resource</h3>
+        {/* Resource Update Form */}
+        <section className="form-section form-pane">
+          <h3>Update Resource</h3>
         <form onSubmit={handleUpdateSubmit} className="creation-form">
-          <div className="form-group">
-            <label htmlFor="rid">Resource ID (RID):</label>
-            <input
-              type="number"
-              id="rid"
-              name="rid"
-              value={updateForm.rid}
-              onChange={handleUpdateChange}
-              required
-              disabled={updateLoading}
-              min="1"
-            />
+          <div className="form-row">
+            <div className="form-group autocomplete-group">
+              <label htmlFor="rid">Resource ID (RID):</label>
+              <input
+                type="text"
+                id="rid"
+                name="rid"
+                value={updateForm.rid}
+                onChange={handleUpdateChange}
+                onFocus={() => updateForm.rid && setShowRidDropdown(ridSuggestions.length > 0)}
+                onBlur={() => setTimeout(() => setShowRidDropdown(false), 200)}
+                required
+                disabled={updateLoading}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              {showRidDropdown && ridSuggestions.length > 0 && (
+                <ul className="autocomplete-dropdown">
+                  {ridSuggestions.map((resource) => (
+                    <li 
+                      key={`rid-${resource.RID}`}
+                      onClick={() => handleResourceSelect(resource)}
+                    >
+                      RID: {resource.RID} - {resource.name} (WID: {resource.WID})
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="form-group autocomplete-group">
+              <label htmlFor="wid">Worker ID (WID):</label>
+              <input
+                type="text"
+                id="wid"
+                name="wid"
+                value={updateForm.wid}
+                onChange={handleUpdateChange}
+                onFocus={() => updateForm.wid && setShowWidDropdown(widSuggestions.length > 0)}
+                onBlur={() => setTimeout(() => setShowWidDropdown(false), 200)}
+                disabled={updateLoading}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              {showWidDropdown && widSuggestions.length > 0 && (
+                <ul className="autocomplete-dropdown">
+                  {widSuggestions.map((resource) => (
+                    <li 
+                      key={`wid-${resource.RID}`}
+                      onClick={() => handleResourceSelect(resource)}
+                    >
+                      WID: {resource.WID} - {resource.name} (RID: {resource.RID})
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="form-group autocomplete-group">
+              <label htmlFor="name">Name:</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={updateForm.name}
+                onChange={handleUpdateChange}
+                onFocus={() => updateForm.name && setShowNameDropdown(nameSuggestions.length > 0)}
+                onBlur={() => setTimeout(() => setShowNameDropdown(false), 200)}
+                disabled={updateLoading}
+                placeholder="Type to search..."
+                autoComplete="off"
+              />
+              {showNameDropdown && nameSuggestions.length > 0 && (
+                <ul className="autocomplete-dropdown">
+                  {nameSuggestions.map((resource) => (
+                    <li 
+                      key={`name-${resource.RID}`}
+                      onClick={() => handleResourceSelect(resource)}
+                    >
+                      {resource.name} - RID: {resource.RID}, WID: {resource.WID}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="org">Organization:</label>
+              <input
+                type="text"
+                id="org"
+                name="org"
+                value={updateForm.org}
+                disabled
+                readOnly
+                className="readonly-field"
+                placeholder="Auto-filled"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="update_res_start">New Resource Start Date (optional):</label>
-            <input
-              type="date"
-              id="update_res_start"
-              name="res_start"
-              value={updateForm.res_start}
-              onChange={handleUpdateChange}
-              disabled={updateLoading}
-            />
-          </div>
+          <div className="form-row">
+            <div className="form-group">
+              {updateForm.current_res_start && (
+                <div className="current-date-label">
+                  <strong>Current Start Date:</strong> {updateForm.current_res_start}
+                </div>
+              )}
+              <label htmlFor="update_res_start">New Resource Start Date (optional):</label>
+              <input
+                type="date"
+                id="update_res_start"
+                name="res_start"
+                value={updateForm.res_start}
+                onChange={handleUpdateChange}
+                disabled={updateLoading}
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="update_res_end">New Resource End Date (optional):</label>
-            <input
-              type="date"
-              id="update_res_end"
-              name="res_end"
-              value={updateForm.res_end}
-              onChange={handleUpdateChange}
-              disabled={updateLoading}
-            />
+            <div className="form-group">
+              {updateForm.current_res_end && (
+                <div className="current-date-label">
+                  <strong>Current End Date:</strong> {updateForm.current_res_end === '9999-12-31' ? '∞' : updateForm.current_res_end}
+                </div>
+              )}
+              <label htmlFor="update_res_end">New Resource End Date (optional):</label>
+              <input
+                type="date"
+                id="update_res_end"
+                name="res_end"
+                value={updateForm.res_end}
+                onChange={handleUpdateChange}
+                disabled={updateLoading}
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={updateLoading}>
@@ -236,7 +434,8 @@ function CreationPanel() {
             </div>
           )}
         </form>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

@@ -11,22 +11,6 @@ import './App.css';
 function App() {
   const [activeTab, setActiveTab] = useState('creation');
 
-  /**
-   * Render the active panel based on selected tab
-   */
-  const renderActivePanel = () => {
-    switch (activeTab) {
-      case 'creation':
-        return <CreationPanel />;
-      case 'viewing':
-        return <ViewingPanel />;
-      case 'query':
-        return <QueryPanel />;
-      default:
-        return <CreationPanel />;
-    }
-  };
-
   return (
     <div className="app">
       <header className="app-header">
@@ -56,7 +40,15 @@ function App() {
       </nav>
 
       <main className="app-main">
-        {renderActivePanel()}
+        <div style={{ display: activeTab === 'creation' ? 'block' : 'none' }}>
+          <CreationPanel />
+        </div>
+        <div style={{ display: activeTab === 'viewing' ? 'block' : 'none' }}>
+          <ViewingPanel />
+        </div>
+        <div style={{ display: activeTab === 'query' ? 'block' : 'none' }}>
+          <QueryPanel />
+        </div>
       </main>
 
       <footer className="app-footer">
