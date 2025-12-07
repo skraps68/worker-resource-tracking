@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CreationPanel from './components/CreationPanel';
 import ViewingPanel from './components/ViewingPanel';
+import OpenRecordsPanel from './components/OpenRecordsPanel';
 import QueryPanel from './components/QueryPanel';
 import './App.css';
 
@@ -32,10 +33,16 @@ function App() {
           Active Resources
         </button>
         <button
+          className={`nav-tab ${activeTab === 'open' ? 'active' : ''}`}
+          onClick={() => setActiveTab('open')}
+        >
+          Open Resource Records
+        </button>
+        <button
           className={`nav-tab ${activeTab === 'query' ? 'active' : ''}`}
           onClick={() => setActiveTab('query')}
         >
-          Query History
+          Query
         </button>
       </nav>
 
@@ -45,6 +52,9 @@ function App() {
         </div>
         <div style={{ display: activeTab === 'viewing' ? 'block' : 'none' }}>
           <ViewingPanel />
+        </div>
+        <div style={{ display: activeTab === 'open' ? 'block' : 'none' }}>
+          <OpenRecordsPanel />
         </div>
         <div style={{ display: activeTab === 'query' ? 'block' : 'none' }}>
           <QueryPanel />

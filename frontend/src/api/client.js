@@ -44,10 +44,18 @@ export async function updateResource(rid, data) {
 }
 
 /**
- * Get all currently active resources
+ * Get all currently active resources (business date constrained to today)
  */
 export async function getActiveResources() {
   const response = await fetch(`${API_BASE_URL}/resources/active`);
+  return handleResponse(response);
+}
+
+/**
+ * Get all open resource records (proc_end = infinity)
+ */
+export async function getOpenResourceRecords() {
+  const response = await fetch(`${API_BASE_URL}/resources/open`);
   return handleResponse(response);
 }
 

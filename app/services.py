@@ -117,7 +117,25 @@ class ResourceService:
     
     @staticmethod
     def get_active_resources():
-        """Get all active resources with worker information."""
+        """Get all active resources with worker information (business date constrained to today)."""
+        from datetime import date
+        today = date.today()
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT r.RID, r.version, r.WID, w.name, w.org, w.type,
+                          r.res_start, r.res_end, r.proc_start, r.proc_end
+                   FROM resource r
+                   JOIN worker w ON r.WID = w.WID
+                   WHERE r.proc_end = %s
+                     AND r.res_start <= %s AND r.res_end > %s""",
+                (INFINITY_DATETIME, today, today)
+            )
+            return cursor.fetchall()
+    
+    @staticmethod
+    def get_open_resource_records():
+        """Get all open resource records (proc_end = infinity) with worker information."""
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(

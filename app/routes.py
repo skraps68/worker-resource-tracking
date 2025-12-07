@@ -79,9 +79,37 @@ def update_resource(rid):
 
 @api_bp.route('/resources/active', methods=['GET'])
 def get_active_resources():
-    """Get all active resources."""
+    """Get all active resources (business date constrained to today)."""
     try:
         resources = ResourceService.get_active_resources()
+        
+        # Convert to JSON-serializable format
+        result = []
+        for r in resources:
+            result.append({
+                'RID': r['rid'],
+                'version': r['version'],
+                'WID': r['wid'],
+                'name': r['name'],
+                'org': r['org'],
+                'type': r['type'],
+                'res_start': r['res_start'].isoformat(),
+                'res_end': r['res_end'].isoformat(),
+                'proc_start': r['proc_start'].isoformat(),
+                'proc_end': r['proc_end'].isoformat()
+            })
+        
+        return jsonify(result), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/resources/open', methods=['GET'])
+def get_open_resource_records():
+    """Get all open resource records (proc_end = infinity)."""
+    try:
+        resources = ResourceService.get_open_resource_records()
         
         # Convert to JSON-serializable format
         result = []
