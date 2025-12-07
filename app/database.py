@@ -35,9 +35,25 @@ def get_db():
 
 
 def create_schema():
-    """Create database schema with worker and resource tables."""
+    """Create database schema with worker, resource, org, and worker_type tables."""
     with get_db() as conn:
         cursor = conn.cursor()
+        
+        # Create org table (must be created before worker due to potential FK)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS org (
+                name TEXT PRIMARY KEY,
+                parent TEXT,
+                FOREIGN KEY (parent) REFERENCES org(name)
+            )
+        """)
+        
+        # Create worker_type table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS worker_type (
+                type TEXT PRIMARY KEY
+            )
+        """)
         
         # Create worker table
         cursor.execute("""
@@ -67,6 +83,38 @@ def create_schema():
         # Create sequence for RID generation
         cursor.execute("""
             CREATE SEQUENCE IF NOT EXISTS resource_rid_seq
+        """)
+        
+        conn.commit()
+
+
+def load_static_data():
+    """Load static reference data into org and worker_type tables."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Load organization data (parent must be inserted before children)
+        cursor.execute("""
+            INSERT INTO org (name, parent) VALUES ('All', NULL)
+            ON CONFLICT (name) DO NOTHING
+        """)
+        
+        cursor.execute("""
+            INSERT INTO org (name, parent) VALUES 
+                ('Sales', 'All'),
+                ('Marketing', 'All'),
+                ('Technology', 'All'),
+                ('Quality Assurance', 'All')
+            ON CONFLICT (name) DO NOTHING
+        """)
+        
+        # Load worker type data
+        cursor.execute("""
+            INSERT INTO worker_type (type) VALUES 
+                ('Employee'),
+                ('Consultant - Fixed'),
+                ('Consultant - T&M')
+            ON CONFLICT (type) DO NOTHING
         """)
         
         conn.commit()

@@ -166,3 +166,21 @@ class ResourceService:
                 (processing_datetime, processing_datetime, business_date, business_date)
             )
             return cursor.fetchall()
+    
+    @staticmethod
+    def get_orgs():
+        """Get all organizations."""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, parent FROM org ORDER BY name")
+            rows = cursor.fetchall()
+            return [{'name': row['name'], 'parent': row['parent']} for row in rows]
+    
+    @staticmethod
+    def get_worker_types():
+        """Get all worker types."""
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT type FROM worker_type ORDER BY type")
+            rows = cursor.fetchall()
+            return [row['type'] for row in rows]

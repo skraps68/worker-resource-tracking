@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createWorker, updateResource, getActiveResources } from '../api/client';
+import { createWorker, updateResource, getActiveResources, getOrgs, getWorkerTypes } from '../api/client';
 import './CreationPanel.css';
 
 /**
@@ -30,6 +30,10 @@ function CreationPanel() {
   // State for active resources (for autocomplete)
   const [activeResources, setActiveResources] = useState([]);
   
+  // State for org and worker type options
+  const [orgs, setOrgs] = useState([]);
+  const [workerTypes, setWorkerTypes] = useState([]);
+  
   // State for autocomplete suggestions
   const [ridSuggestions, setRidSuggestions] = useState([]);
   const [widSuggestions, setWidSuggestions] = useState([]);
@@ -49,10 +53,12 @@ function CreationPanel() {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   /**
-   * Fetch active resources on component mount
+   * Fetch active resources, orgs, and worker types on component mount
    */
   useEffect(() => {
     fetchActiveResources();
+    fetchOrgs();
+    fetchWorkerTypes();
   }, []);
 
   /**
@@ -64,6 +70,30 @@ function CreationPanel() {
       setActiveResources(data);
     } catch (error) {
       console.error('Error fetching active resources:', error);
+    }
+  };
+
+  /**
+   * Fetch organizations for dropdown
+   */
+  const fetchOrgs = async () => {
+    try {
+      const data = await getOrgs();
+      setOrgs(data);
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+    }
+  };
+
+  /**
+   * Fetch worker types for dropdown
+   */
+  const fetchWorkerTypes = async () => {
+    try {
+      const data = await getWorkerTypes();
+      setWorkerTypes(data);
+    } catch (error) {
+      console.error('Error fetching worker types:', error);
     }
   };
 
@@ -234,28 +264,40 @@ function CreationPanel() {
 
           <div className="form-group">
             <label htmlFor="org">Organization:</label>
-            <input
-              type="text"
+            <select
               id="org"
               name="org"
               value={workerForm.org}
               onChange={handleWorkerChange}
               required
               disabled={workerLoading}
-            />
+            >
+              <option value="">Select an organization...</option>
+              {orgs.map((org) => (
+                <option key={org.name} value={org.name}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="type">Type:</label>
-            <input
-              type="text"
+            <label htmlFor="type">Worker Type:</label>
+            <select
               id="type"
               name="type"
               value={workerForm.type}
               onChange={handleWorkerChange}
               required
               disabled={workerLoading}
-            />
+            >
+              <option value="">Select a worker type...</option>
+              {workerTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
@@ -272,7 +314,7 @@ function CreationPanel() {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={workerLoading}>
-            {workerLoading ? 'Creating...' : 'Create Worker'}
+            {workerLoading ? 'Creating...' : 'Create'}
           </button>
 
           {workerMessage.text && (
@@ -425,7 +467,7 @@ function CreationPanel() {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={updateLoading}>
-            {updateLoading ? 'Updating...' : 'Update Resource'}
+            {updateLoading ? 'Updating...' : 'Update'}
           </button>
 
           {updateMessage.text && (

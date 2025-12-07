@@ -174,3 +174,23 @@ def as_of_query():
         return jsonify({'error': 'Invalid date format'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/orgs', methods=['GET'])
+def get_orgs():
+    """Get all organizations."""
+    try:
+        orgs = ResourceService.get_orgs()
+        return jsonify(orgs), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/worker-types', methods=['GET'])
+def get_worker_types():
+    """Get all worker types."""
+    try:
+        types = ResourceService.get_worker_types()
+        return jsonify(types), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

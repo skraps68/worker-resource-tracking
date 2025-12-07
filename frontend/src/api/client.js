@@ -71,3 +71,19 @@ export async function getAsOfResources(businessDate, processingDatetime = null) 
   const response = await fetch(`${API_BASE_URL}/resources/as-of?${params}`);
   return handleResponse(response);
 }
+
+/**
+ * Get all organizations
+ */
+export async function getOrgs() {
+  const response = await fetch(`${API_BASE_URL}/orgs`);
+  return handleResponse(response);
+}
+
+/**
+ * Get all worker types
+ */
+export async function getWorkerTypes() {
+  const response = await fetch(`${API_BASE_URL}/worker-types`);
+  return handleResponse(response);
+}

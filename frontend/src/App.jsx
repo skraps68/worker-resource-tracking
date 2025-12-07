@@ -24,7 +24,7 @@ function App() {
           className={`nav-tab ${activeTab === 'creation' ? 'active' : ''}`}
           onClick={() => setActiveTab('creation')}
         >
-          Creation
+          Create/Update
         </button>
         <button
           className={`nav-tab ${activeTab === 'viewing' ? 'active' : ''}`}

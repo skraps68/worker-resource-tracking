@@ -2,7 +2,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
-from app.database import init_db
+from app.database import init_db, load_static_data
 
 
 def create_app(config=None):
@@ -23,6 +23,12 @@ def create_app(config=None):
     
     # Initialize database
     init_db(app)
+    
+    # Load static reference data
+    try:
+        load_static_data()
+    except Exception as e:
+        app.logger.warning(f"Could not load static data: {e}")
     
     # Register blueprints
     from app.routes import api_bp
