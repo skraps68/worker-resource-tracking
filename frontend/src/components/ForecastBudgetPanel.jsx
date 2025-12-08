@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getForecastBudgetData, getOrgs } from '../api/client';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './ForecastBudgetPanel.css';
 
 /**
@@ -77,7 +77,25 @@ function ForecastBudgetPanel() {
         new Date(a.date) - new Date(b.date)
       );
       
-      setChartData(mergedData);
+      // Calculate variance for area coloring
+      // We need to create stacked areas that fill between the lines
+      // When budget > forecast (under budget): green area from forecast to budget
+      // When forecast > budget (over budget): red area from budget to forecast
+      const dataWithVariance = mergedData.map(item => {
+        const isUnderBudget = item.budget >= item.forecast;
+        return {
+          ...item,
+          // Base layer: always the lower value
+          baseValue: Math.min(item.budget, item.forecast),
+          // Green area: difference when under budget
+          underBudgetArea: isUnderBudget ? item.budget - item.forecast : 0,
+          // Red area: difference when over budget
+          overBudgetArea: !isUnderBudget ? item.forecast - item.budget : 0,
+          isUnderBudget
+        };
+      });
+      
+      setChartData(dataWithVariance);
     } catch (err) {
       setError(`Error loading chart data: ${err.message}`);
     } finally {
@@ -90,6 +108,30 @@ function ForecastBudgetPanel() {
    */
   const handleOrgChange = (e) => {
     setSelectedOrg(e.target.value);
+  };
+
+  /**
+   * Custom tooltip to show variance information
+   */
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const variance = data.budget - data.forecast;
+      const varianceLabel = variance >= 0 ? 'Under Budget' : 'Over Budget';
+      const varianceColor = variance >= 0 ? '#4CAF50' : '#f44336';
+      
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-date"><strong>{data.date}</strong></p>
+          <p className="tooltip-budget">Budget: {data.budget}</p>
+          <p className="tooltip-forecast">Forecast: {data.forecast}</p>
+          <p className="tooltip-variance" style={{ color: varianceColor }}>
+            {varianceLabel}: {Math.abs(variance)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -130,7 +172,17 @@ function ForecastBudgetPanel() {
       {!loading && !error && chartData.length > 0 && (
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <defs>
+                <linearGradient id="colorUnderBudget" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#4CAF50" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="colorOverBudget" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f44336" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#f44336" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="date" 
@@ -139,8 +191,42 @@ function ForecastBudgetPanel() {
               <YAxis 
                 label={{ value: 'Headcount', angle: -90, position: 'insideLeft' }}
               />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
+              
+              {/* Base area (invisible, just to establish baseline) */}
+              <Area
+                type="monotone"
+                dataKey="baseValue"
+                fill="transparent"
+                stroke="none"
+                stackId="variance"
+              />
+              
+              {/* Area for under budget (green) - stacked on base */}
+              <Area
+                type="monotone"
+                dataKey="underBudgetArea"
+                fill="url(#colorUnderBudget)"
+                stroke="none"
+                fillOpacity={1}
+                stackId="variance"
+                name="Under Budget"
+                legendType="none"
+              />
+              
+              {/* Area for over budget (red) - stacked on base */}
+              <Area
+                type="monotone"
+                dataKey="overBudgetArea"
+                fill="url(#colorOverBudget)"
+                stroke="none"
+                fillOpacity={1}
+                stackId="variance"
+                name="Over Budget"
+                legendType="none"
+              />
+              
               <Line 
                 type="monotone" 
                 dataKey="budget" 
@@ -148,6 +234,7 @@ function ForecastBudgetPanel() {
                 strokeWidth={2}
                 name="Budget"
                 connectNulls
+                dot={{ r: 3 }}
               />
               <Line 
                 type="monotone" 
@@ -156,8 +243,9 @@ function ForecastBudgetPanel() {
                 strokeWidth={2}
                 name="Forecast"
                 connectNulls
+                dot={{ r: 3 }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       )}

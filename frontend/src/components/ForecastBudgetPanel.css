@@ -80,6 +80,41 @@
   border: 1px solid #f5c6cb;
 }
 
+/* Custom tooltip styling */
+.custom-tooltip {
+  background-color: white;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.custom-tooltip p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.tooltip-date {
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tooltip-budget {
+  color: #2196F3;
+}
+
+.tooltip-forecast {
+  color: #4CAF50;
+}
+
+.tooltip-variance {
+  font-weight: 600;
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #e0e0e0;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .forecast-budget-panel .panel-header {

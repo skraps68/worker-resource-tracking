@@ -34,6 +34,12 @@ function App() {
           Active Resources
         </button>
         <button
+          className={`nav-tab ${activeTab === 'forecast' ? 'active' : ''}`}
+          onClick={() => setActiveTab('forecast')}
+        >
+          Forecast vs Budget
+        </button>
+        <button
           className={`nav-tab ${activeTab === 'open' ? 'active' : ''}`}
           onClick={() => setActiveTab('open')}
         >
@@ -45,12 +51,6 @@ function App() {
         >
           Query
         </button>
-        <button
-          className={`nav-tab ${activeTab === 'forecast' ? 'active' : ''}`}
-          onClick={() => setActiveTab('forecast')}
-        >
-          Forecast vs Budget
-        </button>
       </nav>
 
       <main className="app-main">
@@ -60,14 +60,14 @@ function App() {
         <div style={{ display: activeTab === 'viewing' ? 'block' : 'none' }}>
           <ViewingPanel />
         </div>
+        <div style={{ display: activeTab === 'forecast' ? 'block' : 'none' }}>
+          <ForecastBudgetPanel />
+        </div>
         <div style={{ display: activeTab === 'open' ? 'block' : 'none' }}>
           <OpenRecordsPanel />
         </div>
         <div style={{ display: activeTab === 'query' ? 'block' : 'none' }}>
           <QueryPanel />
-        </div>
-        <div style={{ display: activeTab === 'forecast' ? 'block' : 'none' }}>
-          <ForecastBudgetPanel />
         </div>
       </main>
 
