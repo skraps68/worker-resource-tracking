@@ -3,6 +3,7 @@ import CreationPanel from './components/CreationPanel';
 import ViewingPanel from './components/ViewingPanel';
 import OpenRecordsPanel from './components/OpenRecordsPanel';
 import QueryPanel from './components/QueryPanel';
+import ForecastBudgetPanel from './components/ForecastBudgetPanel';
 import './App.css';
 
 /**
@@ -44,6 +45,12 @@ function App() {
         >
           Query
         </button>
+        <button
+          className={`nav-tab ${activeTab === 'forecast' ? 'active' : ''}`}
+          onClick={() => setActiveTab('forecast')}
+        >
+          Forecast vs Budget
+        </button>
       </nav>
 
       <main className="app-main">
@@ -58,6 +65,9 @@ function App() {
         </div>
         <div style={{ display: activeTab === 'query' ? 'block' : 'none' }}>
           <QueryPanel />
+        </div>
+        <div style={{ display: activeTab === 'forecast' ? 'block' : 'none' }}>
+          <ForecastBudgetPanel />
         </div>
       </main>
 

@@ -35,7 +35,7 @@ def get_db():
 
 
 def create_schema():
-    """Create database schema with worker, resource, org, and worker_type tables."""
+    """Create database schema with worker, resource, org, worker_type, and hc_series tables."""
     with get_db() as conn:
         cursor = conn.cursor()
         
@@ -52,6 +52,18 @@ def create_schema():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS worker_type (
                 type TEXT PRIMARY KEY
+            )
+        """)
+        
+        # Create hc_series table for budget and forecast time series
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS hc_series (
+                series_type CHAR(1) NOT NULL CHECK (series_type IN ('B', 'F')),
+                org TEXT NOT NULL,
+                date DATE NOT NULL,
+                value INTEGER NOT NULL,
+                PRIMARY KEY (series_type, org, date),
+                FOREIGN KEY (org) REFERENCES org(name)
             )
         """)
         

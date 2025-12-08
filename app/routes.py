@@ -194,3 +194,13 @@ def get_worker_types():
         return jsonify(types), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/forecast-budget/<org_name>', methods=['GET'])
+def get_forecast_budget(org_name):
+    """Get forecast and budget time series data for an organization."""
+    try:
+        data = ResourceService.get_forecast_budget_data(org_name)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

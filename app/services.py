@@ -184,3 +184,104 @@ class ResourceService:
             cursor.execute("SELECT type FROM worker_type ORDER BY type")
             rows = cursor.fetchall()
             return [row['type'] for row in rows]
+    
+    @staticmethod
+    def get_forecast_budget_data(org_name):
+        """Get forecast and budget time series data for an organization.
+        
+        Budget data comes from hc_series table (series_type = 'B').
+        Forecast data is calculated from resource table by counting active workers
+        for each budget date (using open records where proc_end = infinity).
+        
+        If org_name is 'All' (root org), sum values across all child orgs.
+        Otherwise, return data for the specific org.
+        """
+        with get_db() as conn:
+            cursor = conn.cursor()
+            
+            # Check if this is the root org by seeing if it has no parent
+            cursor.execute("SELECT parent FROM org WHERE name = %s", (org_name,))
+            org_row = cursor.fetchone()
+            
+            if not org_row:
+                return {'budget': [], 'forecast': []}
+            
+            is_root = org_row['parent'] is None
+            
+            # Get budget data from hc_series table
+            if is_root:
+                # Sum budget values across all child orgs
+                cursor.execute("""
+                    SELECT date, SUM(value) as total_value
+                    FROM hc_series
+                    WHERE series_type = 'B' 
+                      AND org IN (SELECT name FROM org WHERE parent = %s)
+                    GROUP BY date
+                    ORDER BY date
+                """, (org_name,))
+            else:
+                # Get budget data for specific org
+                cursor.execute("""
+                    SELECT date, value
+                    FROM hc_series
+                    WHERE series_type = 'B' AND org = %s
+                    ORDER BY date
+                """, (org_name,))
+            
+            budget_rows = cursor.fetchall()
+            budget_data = []
+            forecast_data = []
+            
+            for row in budget_rows:
+                budget_data.append({
+                    'date': row['date'].isoformat(),
+                    'value': row['total_value'] if is_root else row['value']
+                })
+            
+            # Get forecast data by counting active workers from resource table
+            # For each budget date, count workers where:
+            # - proc_end = infinity (open records)
+            # - res_start <= date AND res_end > date (active on that date)
+            if is_root:
+                # Count workers across all child orgs
+                for row in budget_rows:
+                    budget_date = row['date']
+                    cursor.execute("""
+                        SELECT COUNT(*) as worker_count
+                        FROM resource r
+                        JOIN worker w ON r.WID = w.WID
+                        WHERE r.proc_end = %s
+                          AND r.res_start <= %s 
+                          AND r.res_end > %s
+                          AND w.org IN (SELECT name FROM org WHERE parent = %s)
+                    """, (INFINITY_DATETIME, budget_date, budget_date, org_name))
+                    
+                    count_row = cursor.fetchone()
+                    forecast_data.append({
+                        'date': budget_date.isoformat(),
+                        'value': count_row['worker_count']
+                    })
+            else:
+                # Count workers for specific org
+                for row in budget_rows:
+                    budget_date = row['date']
+                    cursor.execute("""
+                        SELECT COUNT(*) as worker_count
+                        FROM resource r
+                        JOIN worker w ON r.WID = w.WID
+                        WHERE r.proc_end = %s
+                          AND r.res_start <= %s 
+                          AND r.res_end > %s
+                          AND w.org = %s
+                    """, (INFINITY_DATETIME, budget_date, budget_date, org_name))
+                    
+                    count_row = cursor.fetchone()
+                    forecast_data.append({
+                        'date': budget_date.isoformat(),
+                        'value': count_row['worker_count']
+                    })
+            
+            return {
+                'budget': budget_data,
+                'forecast': forecast_data
+            }

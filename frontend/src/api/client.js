@@ -87,3 +87,11 @@ export async function getWorkerTypes() {
   const response = await fetch(`${API_BASE_URL}/worker-types`);
   return handleResponse(response);
 }
+
+/**
+ * Get forecast and budget time series data for an organization
+ */
+export async function getForecastBudgetData(orgName) {
+  const response = await fetch(`${API_BASE_URL}/forecast-budget/${encodeURIComponent(orgName)}`);
+  return handleResponse(response);
+}
